@@ -239,6 +239,7 @@ if __name__ == '__main__':
             print("Inject:             {}".format(mon_item.read_device_status_values(device_origin)[0]))
             print("Worker:             {} (Init={})".format(mon_item.read_mad_status_values(device_origin)[0],
                                                             mon_item.read_mad_status_values(device_origin)[4]))
+            print("Worker idle:        {}".format("idle" in mon_item.read_mad_status_values(device_origin)[0]))
             print("LastData:           {} ( {} minutes ago )".format(
                 mon_item.check_time_since_last_data(device_origin)[1],
                 mon_item.check_time_since_last_data(device_origin)[0]))
@@ -259,7 +260,9 @@ if __name__ == '__main__':
                                                                          mon_item.check_last_reboot(device_origin))))
 
             # do reboot if nessessary
-            if mon_item.read_device_status_values(device_origin)[0] == False and mon_item.check_time_since_last_data(
+            if "idle" in mon_item.read_mad_status_values(device_origin)[0] == True:
+                print("Device {} in IDLE mode".format(device.origin))
+            elif mon_item.read_device_status_values(device_origin)[0] == False and mon_item.check_time_since_last_data(
                     device_origin)[0] > int(mon_item.mitm_timeout) or mon_item.calc_past_min_from_now(
                 mon_item.read_mad_status_values(device_origin)[3]) > int(mon_item.proto_timeout):
                 if mon_item.calc_past_min_from_now(
@@ -268,13 +271,13 @@ if __name__ == '__main__':
                     mon_item.set_device_reboot_time(device_origin)
                     if mon_item.calc_past_min_from_now(mon_item.read_mad_status_values(device_origin)[3]) > int(
                             mon_item.force_reboot_timeout):
-                        cmd = "{}/RebootMadDevice.py --force --origin {}".format(get_script_directory(), device_origin)
+                        cmd = "python3 {}/RebootMadDevice.py --force --origin {}".format(get_script_directory(), device_origin)
                         try:
                             subprocess.check_output([cmd], shell=True)
                         except subprocess.CalledProcessError:
                             print("Failed to call reboot script with force option")
                     else:
-                        cmd = "{}/RebootMadDevice.py --origin {}".format(get_script_directory(), device_origin)
+                        cmd = "python3 {}/RebootMadDevice.py --origin {}".format(get_script_directory(), device_origin)
                         try:
                             subprocess.check_output([cmd], shell=True)
                         except subprocess.CalledProcessError:
